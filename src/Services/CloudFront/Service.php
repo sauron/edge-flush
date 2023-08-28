@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace A17\EdgeFlush\Services\CloudFront;
 
@@ -34,7 +36,10 @@ class Service extends BaseService implements CDNService
         if (!$this->enabled()) {
             return $invalidation;
         }
-
+        Log::debug(
+            '[CLOUD FRONT]: Invalidate function' .
+            json_encode($invalidation)
+        );
         return $this->mustInvalidateAll($invalidation)
             ? $this->invalidateAll()
             : $this->invalidatePaths($invalidation);
@@ -131,8 +136,20 @@ class Service extends BaseService implements CDNService
     ): Invalidation {
         $invalidation = $this->createInvalidation($invalidation);
 
+        Log::debug(
+            '[CLOUD FRONT]: createInvalidationRequest' .
+            json_encode($invalidation)
+        );
         $paths = $invalidation->paths()->toArray();
-
+        Log::debug(
+            '[CLOUD FRONT]: createInvalidationRequest' .
+            count($paths) .
+                ' path(s): (' .
+                collect($paths)
+                    ->take(20)
+                    ->implode(', ') .
+                ')...',
+        );
         Helpers::debug(
             '[CLOUD FRONT]: Invalidating ' .
                 count($paths) .
@@ -198,7 +215,7 @@ class Service extends BaseService implements CDNService
         if ($invalidation->paths()->isEmpty()) {
             $paths = collect($invalidation->tags())
                 ->mapWithKeys(
-                    fn($tag) => [$this->getInvalidationPath($tag) => $tag],
+                    fn ($tag) => [$this->getInvalidationPath($tag) => $tag],
                 )
                 ->keys()
                 ->unique()
@@ -212,12 +229,21 @@ class Service extends BaseService implements CDNService
 
     public function mustInvalidateAll(Invalidation $invalidation): bool
     {
+        Log::debug(
+            '[CLOUD FRONT]: Invalidation invalidate all? ' .
+            $this->getInvalidationPathsForTags($invalidation)->count() >=
+            $this->maxUrls() ? "True" : "False"
+        );
         return $this->getInvalidationPathsForTags($invalidation)->count() >=
             $this->maxUrls();
     }
 
     public function invalidatePaths(Invalidation $invalidation): Invalidation
     {
+        Log::debug(
+            '[CLOUD FRONT]: Invalidating invalidatePaths' .
+            json_encode($invalidation)
+        );
         return $this->createInvalidationRequest($invalidation);
     }
 

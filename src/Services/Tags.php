@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace A17\EdgeFlush\Services;
 
@@ -25,7 +27,8 @@ use A17\EdgeFlush\Behaviours\ControlsInvalidations;
 
 class Tags
 {
-    use ControlsInvalidations, MakeTag;
+    use ControlsInvalidations;
+    use MakeTag;
 
     protected Collection $tags;
 
@@ -121,7 +124,7 @@ class Tags
          */
         return collect(
             config('edge-flush.tags.excluded-model-classes'),
-        )->contains(fn(string $pattern) => EdgeFlush::match($pattern, $tag));
+        )->contains(fn (string $pattern) => EdgeFlush::match($pattern, $tag));
     }
 
     protected function tagIsNotExcluded(string $tag): bool
@@ -183,7 +186,7 @@ class Tags
 
         if ($indexes->isNotEmpty()) {
             $indexes = $indexes
-                ->map(fn(mixed $item) => "'" . Helpers::toString($item) . "'")
+                ->map(fn (mixed $item) => "'" . Helpers::toString($item) . "'")
                 ->join(',');
 
             $this->dbStatement("
@@ -238,7 +241,7 @@ class Tags
         Helpers::debug([
             'dispatchInvalidationsForModel - models: ',
             /** @phpstan-ignore-next-line */
-            $models->map(fn(Model $model) => get_class($model)." ({$model->id})")->implode(', ')
+            $models->map(fn (Model $model) => get_class($model)." ({$model->id})")->implode(', ')
         ]);
 
         /**
@@ -297,7 +300,7 @@ class Tags
             $models
                 ->map(
                     /** @phpstan-ignore-next-line */
-                    fn(Model|string $model) => $model instanceof Model
+                    fn (Model|string $model) => $model instanceof Model
                         ? $this->makeModelName($model)
                         : $model,
                 )
@@ -346,7 +349,7 @@ class Tags
             order by edge_flush_urls.hits desc
             ",
             ),
-        )->map(fn($row) => new Url((array) $row));
+        )->map(fn ($row) => new Url((array) $row));
 
         $invalidation = (new Invalidation())->setUrls($rows);
 
@@ -393,7 +396,10 @@ class Tags
         if ($invalidation->isEmpty() || !$this->enabled()) {
             return;
         }
-
+        Helpers::debug(
+            'DISPATCHED EdgeFlush::cdn()->invalidate' .
+            json_encode($invalidation)
+        );
         $invalidation = EdgeFlush::cdn()->invalidate($invalidation);
 
         if ($invalidation->success()) {
@@ -563,7 +569,7 @@ class Tags
      * @param string $url
      * @return Url
      */
-    function createUrl(string $url): Url
+    public function createUrl(string $url): Url
     {
         $url = Helpers::sanitizeUrl($url);
 
@@ -653,7 +659,7 @@ class Tags
     {
         $list = $urls
             ->pluck('id')
-            ->map(fn($item) => Helpers::toString($item))
+            ->map(fn ($item) => Helpers::toString($item))
             ->join(',');
 
         $sql = "
@@ -694,7 +700,7 @@ class Tags
     public function onlyValidModels(Collection $models): Collection
     {
         return $models->filter(
-            fn($model) => $this->tagIsNotExcluded(
+            fn ($model) => $this->tagIsNotExcluded(
                 $model instanceof Model ? get_class($model) : $model,
             ),
         );
@@ -718,7 +724,7 @@ class Tags
             $missing
         );
 
-        return $models->filter(fn($model) => $missing->contains(
+        return $models->filter(fn ($model) => $missing->contains(
             $this->makeModelName($model)
         ));
     }
