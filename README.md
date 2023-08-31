@@ -70,7 +70,7 @@ Define your CDN service class on `config/edge-flush.php`:
 ``` php
 'classes' => [
     'cdn' => A17\EdgeFlush\Services\CloudFront\Service::class,
-    
+
     ...
 ]
 ```
@@ -86,6 +86,14 @@ public function afterSave($object, $fields)
 
     parent::afterSave($object, $fields);
 }
+```
+
+### Note:
+By default there is an enabled listeners that will trigger the invalidation `afterSave` for the `eloquent:saved` event.
+This event listener can be disabled by setting in the configuration:
+
+``` sh
+EDGE_FLUSH_DISABLE_LISTENERS=true
 ```
 
 Call `$this->cacheModelOnCDN($model)` method on model's `getAttribute()`:
