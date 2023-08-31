@@ -379,7 +379,7 @@ return [
 
             'invalidate_all_paths' => ['/*'],
 
-            'max_urls' => 3000, // CloudFront has this limit
+            'max_urls' => env('EDGE_FLUSH_AWS_CLOUDFRONT_MAX_URL', 3000), // CloudFront has this limit
         ],
     ],
 
@@ -452,5 +452,12 @@ return [
     'strip_cookies' => [
         'XSRF-TOKEN',
         Str::slug(env('APP_NAME', 'laravel'), '_') . '*',
+    ],
+
+    /**
+     * Eloquent Listener configuration
+     */
+    'listeners' => [
+        'disable' => env('EDGE_FLUSH_DISABLE_LISTENERS', false)
     ],
 ];

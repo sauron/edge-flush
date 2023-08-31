@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace A17\EdgeFlush;
 
@@ -84,6 +86,9 @@ class ServiceProvider extends IlluminateServiceProvider
 
     public function bootEventListeners(): void
     {
-        Event::listen('eloquent.saved: *', EloquentSaved::class);
+        $disableListener = Helpers::configBool('edge-flush.listeners.disable', false);
+        if(! $disableListener) {
+            Event::listen('eloquent.saved: *', EloquentSaved::class);
+        }
     }
 }
